@@ -33,12 +33,18 @@ public class ShortUrl {
     @Column(nullable = false)
     @Builder.Default
     private Long clickCount = 0L;
-    private Long ownerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private Users owner;
 
     @PrePersist
     public void prePersist() {
         if(this.createdAt == null) {
             this.createdAt = Instant.now();
+        }
+        if(this.updatedAt == null) {
+            this.updatedAt = Instant.now();
         }
     }
 }

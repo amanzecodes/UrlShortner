@@ -13,7 +13,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,14 +30,13 @@ public class ShortUrlController {
             @Valid @RequestBody CreateShortUrlRequest request,
             Authentication authentication
     ) {
-        Long ownerId = null;
+        Users owner = null;
         if (authentication != null && authentication.isAuthenticated()) {
             String email = authentication.getName();
-            ownerId = userRepo.findByEmail(email)
-                    .map(Users::getId)
+            owner = userRepo.findByEmail(email)
                     .orElse(null);
         }
-        ShortUrl created = shortUrlService.createShortUrl(request.originalUrl(), ownerId);
+        ShortUrl created = shortUrlService.createShortUrl(request.originalUrl(), owner);
         return ResponseEntity.status(HttpStatus.CREATED).body(ShortUrlResponse.from(created));
     }
 
@@ -51,4 +53,17 @@ public class ShortUrlController {
         return ResponseEntity.ok(ShortUrlResponse.from(shortUrlService.getStats(code)));
     }
 
+    @GetMapping("/api/urls/mine")
+    public ResponseEntity<List<ShortUrlResponse>> getMyUrls(Authentication authentication) {
+        String email = authentication.getName();
+        Users user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("No user found with email: " + email));
+
+        List<ShortUrlResponse> urls = shortUrlService.getUrlsForUser(user)
+                .stream()
+                .map(ShortUrlResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(urls);
+    }
 }

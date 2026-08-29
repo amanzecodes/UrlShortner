@@ -1,11 +1,14 @@
 package com.urlshortner.UrlShortner.service;
 import com.urlshortner.UrlShortner.entity.ShortUrl;
+import com.urlshortner.UrlShortner.entity.Users;
 import com.urlshortner.UrlShortner.exception.ShortUrlNotFoundException;
 import com.urlshortner.UrlShortner.repository.ShortUrlRepo;
 import com.urlshortner.UrlShortner.util.CodeGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -16,13 +19,13 @@ public class ShortUrlService {
     private static final int MAX_RETRIES = 5;
 
     @Transactional
-    public ShortUrl createShortUrl(String originalUrl, Long ownerId) {
+    public ShortUrl createShortUrl(String originalUrl, Users owner) {
         String shortCode = this.generateUniqueCode();
 
         ShortUrl shortUrl = ShortUrl.builder()
                 .originalUrl(originalUrl)
                 .shortCode(shortCode)
-                .ownerId(ownerId)
+                .owner(owner)
                 .build();
 
         return shortUrlRepo.save(shortUrl);
@@ -52,5 +55,9 @@ public class ShortUrlService {
     public ShortUrl getStats(String shortCode) {
         return shortUrlRepo.findByShortCode(shortCode)
                 .orElseThrow(() -> new ShortUrlNotFoundException(shortCode));
+    }
+
+    public List<ShortUrl> getUrlsForUser(Users owner) {
+        return shortUrlRepo.findByOwner(owner);
     }
 }

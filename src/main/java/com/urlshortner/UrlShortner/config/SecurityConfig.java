@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                 authorizeRequests ->
-                        authorizeRequests.requestMatchers("/api/v1/auth", "/api/v1/welcome", "/r/**")
+                        authorizeRequests.requestMatchers("/api/auth/**", "/api/welcome", "/r/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()
